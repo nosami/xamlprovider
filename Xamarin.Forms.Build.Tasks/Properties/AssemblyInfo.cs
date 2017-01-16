@@ -28,3 +28,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("xamlg")]
 [assembly: InternalsVisibleTo("Xamarin.Forms.Xaml.UnitTests")]
+[assembly: InternalsVisibleTo("Xamarin.Forms.Xaml.Xaml.XamlProviders")]

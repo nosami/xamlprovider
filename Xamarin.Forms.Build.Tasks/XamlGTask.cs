@@ -57,7 +57,7 @@ namespace Xamarin.Forms.Build.Tasks
 			}
 		}
 
-		internal static void ParseXaml(TextReader xaml, out string rootType, out string rootNs, out CodeTypeReference baseType,
+		public static void ParseXaml(TextReader xaml, out string rootType, out string rootNs, out CodeTypeReference baseType,
 			out IDictionary<string, CodeTypeReference> namesAndTypes)
 		{
 			var xmlDoc = new XmlDocument();

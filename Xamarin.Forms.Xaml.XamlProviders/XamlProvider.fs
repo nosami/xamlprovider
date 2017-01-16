@@ -11,6 +11,8 @@ open ProviderImplementation.ProvidedTypes
 
 open Xamarin.Forms.Build.Tasks
 open Xamarin.Forms.Xaml
+open Xamarin.Forms
+open Xamarin.Forms.Core.UnitTests
 
 [<TypeProvider>]
 type XamlTypeProvider (config: TypeProviderConfig) as this =
@@ -27,14 +29,31 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
             |null, null, null, null -> false
             |rootType, ns, baseType, namesAndTypes -> rootType = xClass
     
-    let getType name ns assembly =
+    let getType qualifiedName ns assembly =
+        let name =
+            match qualifiedName with
+            | "Xamarin.Forms.ContentPage" -> "ContentPage"
+            | "Xamarin.Forms.ContentView" -> "ContentView"
+            | _ -> failwithf "Don't know how to handle %s" qualifiedName
+
         match Xamarin.Forms.Xaml.XamlParser.GetElementType (XmlType (ns, name, null), null, asm) with
         |t, null -> t
         |_, ex -> null
     
-    let createFields (namesAndType: IDictionary<string,CodeDom.CodeTypeReference>) =
+    let createFields (namesAndType: IDictionary<string,CodeDom.CodeTypeReference>) content =
         namesAndType |> List.ofSeq |> List.map (fun nameAndType ->
-            ProvidedField (nameAndType.Key, typeof<string>))
+
+            let findByName = typeof<NameScopeExtensions>.GetMethod("FindByName")
+            let argType = Type.GetType(nameAndType.Value.BaseType + ", Xamarin.Forms.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null")
+            let generic = findByName.MakeGenericMethod(argType)
+            //content.FindByName()
+            let res = generic.Invoke(content, [| content; nameAndType.Key |]);
+            ProvidedProperty(propertyName = nameAndType.Key, 
+                                                propertyType = argType, 
+                                                IsStatic=true,
+                                                GetterCode= (fun args -> <@@ res @@>)))
+            //ProvidedField (nameAndType.Key, typeof<string>))
+        //let label = base.FindByName<Label>("myLabel")
 
     let createCtor ()=
         let providedConstructor = ProvidedConstructor([ProvidedParameter("handle", typeof<IntPtr>)])
@@ -51,8 +70,16 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
         let rootType, nsuri, baseCodeReference, namesAndType = XamlGTask.ParseXaml stream
         let baseType = getType baseCodeReference.BaseType "http://xamarin.com/schemas/2014/forms" asm
         let customType = ProvidedTypeDefinition (asm, ns, typeName, Some baseType, IsErased = false)
-
-        namesAndType |> createFields |> List.iter (fun field -> customType.AddMember field)
+        let content = (Activator.CreateInstance baseType :?> Xamarin.Forms.ContentPage)
+        let xaml = File.ReadAllText xamlFile
+        //content.LoadFromXaml(xaml) |> ignore
+        //Xamarin.Forms.Init()
+        Xamarin.Forms.Device.PlatformServices <- new Xamarin.Forms.Core.UnitTests.MockPlatformServices()
+        //Xamarin.Forms.Forms.Init(this, new Bundle())
+        //content.
+        XamlLoader.Load(content, xaml)
+        //content.FindByName<
+        createFields namesAndType content |> List.iter (fun field -> customType.AddMember field)
         customType.AddMember (createCtor ())
 
         customType

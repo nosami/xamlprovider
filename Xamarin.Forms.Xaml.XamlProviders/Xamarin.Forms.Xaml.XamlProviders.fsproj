@@ -19,11 +19,6 @@
     <PlatformTarget>
     </PlatformTarget>
     <Externalconsole>true</Externalconsole>
-    <CustomCommands>
-      <CustomCommands>
-        <Command type="Execute" command="&quot;/Applications/Xamarin Studio.app/Contents/Resources/lib/monodevelop/bin/XamarinStudio.exe&quot; --no-redirect" workingdir="" />
-      </CustomCommands>
-    </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
@@ -70,6 +65,10 @@
     <ProjectReference Include="..\Xamarin.Forms.Core\Xamarin.Forms.Core.csproj">
       <Project>{57B8B73D-C3B5-4C42-869E-7B2F17D354AC}</Project>
       <Name>Xamarin.Forms.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Forms.Core.UnitTests\Xamarin.Forms.Core.UnitTests.csproj">
+      <Project>{00259593-A283-47A5-ACB7-9C3819B16364}</Project>
+      <Name>Xamarin.Forms.Core.UnitTests</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

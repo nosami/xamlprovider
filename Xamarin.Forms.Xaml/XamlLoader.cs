@@ -44,7 +44,7 @@ namespace Xamarin.Forms.Xaml.Internals
 
 namespace Xamarin.Forms.Xaml
 {
-	internal static class XamlLoader
+	static class XamlLoader
 	{
 		static readonly Dictionary<Type, string> XamlResources = new Dictionary<Type, string>();
 
