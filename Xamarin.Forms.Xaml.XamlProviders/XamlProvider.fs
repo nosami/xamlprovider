@@ -65,12 +65,19 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
     let createType typeName (parameterValues: obj [])=
         let xClass = parameterValues.[0] :?> string
         let allXamlFiles = Directory.EnumerateFiles (config.ResolutionFolder, "*.xaml", SearchOption.AllDirectories) |> List.ofSeq
-        let xamlFile = allXamlFiles |>  List.filter (fun path -> isMatchingXClass path xClass) |> List.head
+        let xamlPick = allXamlFiles |> List.tryFind (fun path -> isMatchingXClass path xClass) 
+
+        let xamlFile =
+            match xamlPick with
+            | Some file -> file
+            | _ -> failwithf "Could not find a xaml file with x:Class=\"%s\"" xClass
+
         use stream = File.OpenText xamlFile
         let rootType, nsuri, baseCodeReference, namesAndType = XamlGTask.ParseXaml stream
         let baseType = getType baseCodeReference.BaseType "http://xamarin.com/schemas/2014/forms" asm
         let customType = ProvidedTypeDefinition (asm, ns, typeName, Some baseType, IsErased = false)
-        let content = (Activator.CreateInstance baseType :?> Xamarin.Forms.ContentPage)
+
+        let content = (Activator.CreateInstance baseType :?> IControlTemplated)
         let xaml = File.ReadAllText xamlFile
         //content.LoadFromXaml(xaml) |> ignore
         //Xamarin.Forms.Init()
@@ -80,6 +87,8 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
         XamlLoader.Load(content, xaml)
         //content.FindByName<
         createFields namesAndType content |> List.iter (fun field -> customType.AddMember field)
+        
+
         customType.AddMember (createCtor ())
 
         customType
