@@ -6,6 +6,7 @@ open System.Reflection
 open System.Collections.Generic
 
 open Microsoft.FSharp.Core.CompilerServices
+open Microsoft.FSharp.Quotations
 
 open ProviderImplementation.ProvidedTypes
 
@@ -40,38 +41,70 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
         | t, null -> t
         | _, ex -> null
     
-    let createFields (namesAndType: IDictionary<string,CodeDom.CodeTypeReference>) content =
+    let createFields (namesAndType: IDictionary<string,CodeDom.CodeTypeReference>) (content:Element) =
         namesAndType |> List.ofSeq |> List.map (fun nameAndType ->
             // base.FindByName<Label>("myLabel") where base is ContentPage or ContentView
             let findByName = typeof<NameScopeExtensions>.GetMethod("FindByName")
             //TODO... determine the correct assembly ... code is in XamlParser.cs line 356
-            let argType = Type.GetType(nameAndType.Value.BaseType + ", Xamarin.Forms.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null")
-            let generic = findByName.MakeGenericMethod(argType)
+            let elementType = Type.GetType(nameAndType.Value.BaseType + ", Xamarin.Forms.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null")
+            //let generic = findByName.MakeGenericMethod(argType)
+            let generic = findByName.MakeGenericMethod(typeof<Element>)
             //content.FindByName()
-            let res = generic.Invoke(content, [| content; nameAndType.Key |]);
-            ProvidedProperty(propertyName = nameAndType.Key, 
-                                                propertyType = argType, 
-                                                IsStatic=false,
-                                                GetterCode= (fun args -> <@@ res @@>)))
+            let res = generic.Invoke(null, [| content; nameAndType.Key |]);
+            //Expr.Prop
+            let accessExpr (args:Expr list) =
+                let name = nameAndType.Key
+                let this = args.[0]
+                let expr = Expr.Call(generic, [ Expr.Value content; Expr.Value nameAndType.Key ] )
+                //let thisAsBase = Expr.Coerce(content, argType)
+                //let field = Expr.FieldGet(thisAsBase, fi)
+                //let arg = Expr.Value(res)
+                //let expr = Expr.Call(content, generic, [arg])
+                //Expr.Coerce(expr, argType)
+                expr
+            //expr.
+            //let propertyGet = Expr.P
+            let field = ProvidedField(fieldName = nameAndType.Key, fieldType = elementType)
+            //field.SetValue(this, res)
+            field, res, elementType)
+
+            //ProvidedProperty(propertyName = nameAndType.Key, 
+            //                                    propertyType = argType, 
+            //                                    IsStatic=false,
+            //                                    //GetterCode = fun args -> accessExpr args))
+            //                                    //GetterCode= (fun args -> <@@ res @@>)))
+            //                                    GetterCode= (fun args -> Expr.Value res)))
             //ProvidedField (nameAndType.Key, typeof<string>))
         //let label = base.FindByName<Label>("myLabel")
 
-    let createCtor (baseType:Type)=
+    let createCtor (baseType:Type) (fields: (ProvidedField * obj * Type) list)=
         //let providedConstructor = ProvidedConstructor([ProvidedParameter("handle", typeof<IntPtr>)])
         let providedConstructor = ProvidedConstructor []
         let ctorInfo = baseType.GetConstructor(BindingFlags.Public ||| BindingFlags.Instance, null, [||], null)
         providedConstructor.BaseConstructorCall <- fun args -> ctorInfo, args
-        providedConstructor.InvokeCode <- fun args -> <@@ () @@>
+        providedConstructor.InvokeCode <- 
+            fun args -> 
+                match args with 
+                | [this] ->
+                    //<@@
+                    //    fields |> 
+                    //    List.iter(fun (field, elem) -> field.SetValue(this, elem))
+                    //@@>
+                    let f, e, t = fields |> List.head
+                    //Expr.FieldSet(this, f, Expr.Coerce(Expr.Value e, t))
+                    <@@ () @@>
+                | _ -> failwith "Wrong constructor arguments"
+            //<@@ () @@>
         //providedConstructor.BaseConstructorCall <- fun args -> (fatherCtor, args)
         providedConstructor
 
     let createType typeName (parameterValues: obj [])=
-        let xClass = parameterValues.[0] :?> string
+        let xClass = string parameterValues.[0]
         let allXamlFiles = Directory.EnumerateFiles (config.ResolutionFolder, "*.xaml", SearchOption.AllDirectories) |> List.ofSeq
-        let xamlPick = allXamlFiles |> List.tryFind (fun path -> isMatchingXClass path xClass) 
+        let xamlFileOption = allXamlFiles |> List.tryFind (fun path -> isMatchingXClass path xClass) 
 
         let xamlFile =
-            match xamlPick with
+            match xamlFileOption with
             | Some file -> file
             | _ -> failwithf "Could not find a xaml file with x:Class=\"%s\"" xClass
 
@@ -82,7 +115,7 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
         //let customType = ProvidedTypeDefinition (asm, nsuri, xClass, Some baseType, IsErased = false)
 
         customType.SetAttributes (TypeAttributes.Public ||| TypeAttributes.Class)
-        let content = (Activator.CreateInstance baseType :?> IControlTemplated)
+        let content = (Activator.CreateInstance baseType :?> ContentPage)
         let xaml = File.ReadAllText xamlFile
         //content.LoadFromXaml(xaml) |> ignore
         //Xamarin.Forms.Init()
@@ -91,14 +124,16 @@ type XamlTypeProvider (config: TypeProviderConfig) as this =
         // Also need to create our own PlatformServices. XF blows up on the Xaml load otherwise
         Xamarin.Forms.Device.PlatformServices <- new Xamarin.Forms.Core.UnitTests.MockPlatformServices()
         //Xamarin.Forms.Forms.Init(this, new Bundle())
-        //content.
+        //content.LoadFromXaml()
         XamlLoader.Load(content, xaml)
         //content.FindByName<
-        createFields namesAndType content |> List.iter (fun field -> customType.AddMember field)
+        let fields = createFields namesAndType content
+        fields |> List.iter (fun (field, _elem, _type) -> customType.AddMember field)
 
-        customType.AddMember (createCtor baseType)
-        //let tempAssembly = ProvidedAssembly( Path.ChangeExtension(Path.GetTempFileName(), ".dll"))
-        //tempAssembly.AddTypes [ customType ]   
+        customType.AddMember (createCtor baseType fields)
+        let tempAssembly = ProvidedAssembly( Path.ChangeExtension(Path.GetTempFileName(), ".dll"))
+        tempAssembly.AddTypes [ provider ]   
+        tempAssembly.AddTypes [ customType ]   
         customType
 
     do
