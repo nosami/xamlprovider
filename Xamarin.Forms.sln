@@ -88,7 +88,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Xaml.Design",
 EndProject
 Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Xamarin.Forms.Xaml.XamlProviders", "Xamarin.Forms.Xaml.XamlProviders\Xamarin.Forms.Xaml.XamlProviders.fsproj", "{EAE775B3-62C0-4137-A867-3AA8FAD2A9BC}"
 EndProject
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Test", "Test\Test.fsproj", "{657CBEB7-E62A-40BC-8092-399E80DDE375}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Test", "Test\Test.fsproj", "{657CBEB7-E62A-40BC-8092-399E80DDE375}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{29583A59-ACE2-4C2C-8A73-768D6979551A}"
 	ProjectSection(SolutionItems) = preProject
@@ -143,6 +143,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{DDDFBCAF-93DE-4868-8296-FD909EF32EF7}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "APIDocs", "docs\APIDocs.shproj", "{DC1F3933-AC99-4887-8B09-E13C2B346D4F}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Xamarin.Forms.Xaml.XamlProviders.Runtime", "Xamarin.Forms.Xaml.XamlProviders.Runtime\Xamarin.Forms.Xaml.XamlProviders.Runtime.fsproj", "{B58D9A98-07EA-4A43-A53A-F8BA11F22759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -668,6 +670,18 @@ Global
 		{F3FDD7AC-8899-4E41-BFD7-EC83403E736D}.Release|iPhone.ActiveCfg = Release|Any CPU
 		{F3FDD7AC-8899-4E41-BFD7-EC83403E736D}.Release|iPhone.Build.0 = Release|Any CPU
 		{F3FDD7AC-8899-4E41-BFD7-EC83403E736D}.Release|Templates.ActiveCfg = Release|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Debug|Templates.ActiveCfg = Debug|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Debug|Templates.Build.0 = Debug|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Release|iPhone.Build.0 = Release|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Release|Templates.ActiveCfg = Release|Any CPU
+		{B58D9A98-07EA-4A43-A53A-F8BA11F22759}.Release|Templates.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{57B8B73D-C3B5-4C42-869E-7B2F17D354AC} = {9AD757F5-E57A-459D-A0A7-E0675E045B84}
